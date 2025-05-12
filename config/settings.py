@@ -30,6 +30,8 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
+
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -77,11 +79,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', 'sqlite:///' + str(BASE_DIR / 'db.sqlite3')),
+    'default': dj_database_url.parse(
+        'postgresql://interasoft_db_user:EDpgeQs4HQlmTC79f2CvvPyl4hs8rw4v@dpg-d0gv57juibrs7381b0l0-a/interasoft_db',
         conn_max_age=600
     )
 }
+
 
 AUTH_USER_MODEL = 'usuarios.Usuario'
 
