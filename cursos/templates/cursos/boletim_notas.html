@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Minhas Notas</h2>
+
+{% for curso, capitulos in cursos_com_notas.items %}
+    <h3>{{ curso }}</h3>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr>
+            <th>Capítulo</th>
+            <th>Nota</th>
+        </tr>
+        {% for cap in capitulos %}
+        <tr>
+            <td>{{ cap.capitulo_ordem }} - {{ cap.capitulo_titulo }}</td>
+            <td>{{ cap.nota }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+{% endfor %}
+
+{% endblock %}

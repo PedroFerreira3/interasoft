@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Matricular Alunos</title>
+</head>
+<body>
+    <h1>Matricular Alunos</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label for="curso">Escolha o curso:</label>
+        <select name="curso" id="curso" required>
+            {% for curso in cursos %}
+                <option value="{{ curso.id }}">{{ curso.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <h3>Selecione os alunos:</h3>
+        {% for aluno in alunos %}
+            <div>
+                <input type="checkbox" name="alunos" value="{{ aluno.id }}" id="aluno{{ aluno.id }}">
+                <label for="aluno{{ aluno.id }}">{{ aluno.username }} ({{ aluno.email }})</label>
+            </div>
+        {% endfor %}
+
+        <button type="submit">Matricular</button>
+    </form>
+</body>
+</html>

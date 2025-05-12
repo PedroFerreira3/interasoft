@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Alunos Matriculados</title>
+</head>
+<body>
+    <h1>Alunos Matriculados</h1>
+
+    {% for curso in cursos %}
+        <h2>{{ curso.nome }}</h2>
+
+        {% if curso.alunos.all %}
+            <ul>
+                {% for aluno in curso.alunos.all %}
+                    <li>
+                        {{ aluno.username }} ({{ aluno.email }})
+                        <a href="{% url 'remover_aluno' curso.id aluno.id %}">Remover</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Nenhum aluno matriculado neste curso.</p>
+        {% endif %}
+    {% endfor %}
+
+</body>
+</html>

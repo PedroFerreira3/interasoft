@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Meus Cursos{% endblock %}
+
+{% block content %}
+<h2>Meus Cursos Matriculados</h2>
+
+<div class="course-list">
+    {% for curso in object_list %}
+        <div class="course-card">
+            <h3>{{ curso.nome }}</h3>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: {{ curso.progresso }}%">
+                    {{ curso.progresso }}%
+                </div>
+            </div>
+            <a href="{% url 'cursos:detalhes_curso' curso.id %}" class="btn btn-primary">
+                Acessar Curso
+            </a>
+        </div>
+    {% empty %}
+        <p>Você não está matriculado em nenhum curso ainda.</p>
+    {% endfor %}
+</div>
+
+<style>
+    .course-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    .course-card {
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+    .progress-container {
+        background-color: #e9ecef;
+        border-radius: 10px;
+        height: 20px;
+        margin: 10px 0;
+    }
+    .progress-bar {
+        background-color: #28a745;
+        height: 100%;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+        font-size: 12px;
+        line-height: 20px;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load course_tags %}
+
+{% block title %}Detalhes do Curso{% endblock %}
+
+{% block content %}
+<h2>{{ curso.nome }}</h2>
+
+<!-- Capítulos do Curso -->
+<h3>Conteúdo do Curso</h3>
+<ul class="chapter-list">
+    {% for capitulo in capitulos %}
+    <li class="{% if capitulo.id in capitulos_concluidos %}completed{% endif %}">
+        <div class="chapter-info">
+            <span class="chapter-number">{{ capitulo.ordem|floatformat:"0" }}.</span>
+            <span class="chapter-title">{{ capitulo.titulo }}</span>
+
+            {% if capitulo.id in capitulos_concluidos %}
+                <span class="badge bg-success">✅ Concluído</span>
+            {% endif %}
+        </div>
+
+        {% if capitulo.id in capitulos_liberados %}
+            <a href="{% url 'cursos:assistir_aula' capitulo.id %}" class="btn btn-sm btn-primary">
+                Assistir
+            </a>
+        {% else %}
+            <button class="btn btn-sm btn-secondary" disabled>
+                Bloqueado
+            </button>
+            {% if mensagens_bloqueio|get_item:capitulo.id %}
+                <small class="text-muted">{{ mensagens_bloqueio|get_item:capitulo.id }}</small>
+            {% endif %}
+        {% endif %}
+    </li>
+    {% empty %}
+    <li>Este curso ainda não tem capítulos cadastrados.</li>
+    {% endfor %}
+</ul>
+
+<!-- Barra de progresso -->
+<h3>Seu Progresso</h3>
+<div class="progress-container">
+    <div class="progress-bar" style="width: {{ progresso_percentual }}%">
+        {{ progresso_percentual }}%
+    </div>
+</div>
+
+{% if progresso_percentual == 100 %}
+    <div class="certificate-section">
+        {% if certificado %}
+            <h4>🎉 Parabéns! Você concluiu o curso.</h4>
+            <a href="{% url 'cursos:visualizar_certificado' certificado.id %}" class="btn btn-success" target="_blank">
+                Visualizar Certificado
+            </a>
+        {% else %}
+            <form method="post" action="{% url 'cursos:gerar_certificado' curso.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">
+                    Gerar Certificado
+                </button>
+            </form>
+        {% endif %}
+    </div>
+{% else %}
+    <p class="progress-message">Complete todos os capítulos para obter seu certificado!</p>
+{% endif %}
+
+<style>
+    .chapter-list {
+        list-style: none;
+        padding: 0;
+    }
+    .chapter-list li {
+        padding: 10px;
+        margin-bottom: 5px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .chapter-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .completed {
+        background-color: #f8f9fa;
+    }
+    .progress-container {
+        background-color: #e9ecef;
+        border-radius: 10px;
+        height: 30px;
+        margin-bottom: 20px;
+    }
+    .progress-bar {
+        background-color: #28a745;
+        height: 100%;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+        line-height: 30px;
+    }
+    .progress-message {
+        color: #6c757d;
+        font-style: italic;
+    }
+    .certificate-section {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}

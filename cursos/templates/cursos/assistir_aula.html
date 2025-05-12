@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<script>
+    const API_CONFIG = {
+        userId: "{{ request.user.id }}",
+        chapterId: "{{ capitulo.id }}",
+        isExercise: {% if is_exercicio %}true{% else %}false{% endif %},
+        csrfToken: "{{ csrf_token }}",
+        registerScoreUrl: "{% url 'registrar_nota' %}",
+        markCompletedUrl: "{% url 'cursos:marcar_concluido' capitulo.id %}"
+    };
+
+    window.addEventListener("message", async function(event) {
+        console.log('[Parent] Mensagem recebida:', event.data);
+        if (event.origin !== window.location.origin) return;
+
+        if (event.data === "finalizado" || event.data === "lastSlideReached") {
+            handleContentCompletion();
+        } else if (event.data && event.data.type === 'scoreUpdate') {
+            await handleScoreUpdate(event.data.score);
+        }
+    });
+
+    function handleContentCompletion() {
+        console.log('[Parent] Conteúdo finalizado');
+        if (!API_CONFIG.isExercise) {
+            // Mostra apenas o botão normal, o da tela cheia será mostrado quando necessário
+            document.getElementById("btn-concluir").style.display = "inline-block";
+        }
+    }
+
+    async function handleScoreUpdate(score) {
+        console.log(`[Parent] Processando pontuação: ${score}`);
+
+        try {
+            const response = await fetch(API_CONFIG.registerScoreUrl, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": API_CONFIG.csrfToken,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    user_id: API_CONFIG.userId,
+                    capitulo_id: API_CONFIG.chapterId,
+                    nota: score
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                console.log('[Parent] Pontuação registrada com sucesso');
+                if (API_CONFIG.isExercise && score >= 8) {
+                    const continueBtn = document.getElementById("btn-continuar");
+                    continueBtn.style.display = "inline-block";
+                    if (data.redirect_url) {
+                        continueBtn.onclick = function() {
+                            window.location.href = data.redirect_url;
+                        };
+                    }
+                }
+            } else {
+                throw new Error(data.message || 'Erro ao registrar pontuação');
+            }
+        } catch (error) {
+            console.error('[Parent] Erro ao registrar pontuação:', error);
+            alert('Erro ao enviar nota: ' + error.message);
+        }
+    }
+
+    async function markChapterAsCompleted() {
+        try {
+            const response = await fetch(API_CONFIG.markCompletedUrl, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": API_CONFIG.csrfToken,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({})
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                console.log('[Parent] Capítulo marcado como concluído');
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                }
+            } else {
+                throw new Error(data.message || 'Erro ao marcar como concluído');
+            }
+        } catch (error) {
+            console.error('[Parent] Erro ao marcar como concluído:', error);
+            alert('Erro ao marcar como concluído: ' + error.message);
+        }
+    }
+
+    function toggleFullscreen() {
+        const container = document.querySelector('.captivate-container');
+        if (!document.fullscreenElement) {
+            container.requestFullscreen().catch(err => {
+                console.error('Erro ao entrar em tela cheia:', err);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    function handleFullscreenChange() {
+        const isFullscreen = !!document.fullscreenElement;
+        const exitBtn = document.getElementById("fullscreen-exit-btn");
+        if (exitBtn) exitBtn.style.display = isFullscreen ? "inline-block" : "none";
+
+        // Só mostra o botão de concluir na tela cheia se já estiver visível na normal
+        const normalBtn = document.getElementById("btn-concluir");
+        const fsBtn = document.getElementById("fullscreen-conclude-btn");
+        if (normalBtn && fsBtn) {
+            fsBtn.style.display = (isFullscreen && normalBtn.style.display === "inline-block") ? "inline-block" : "none";
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById("btn-concluir")?.addEventListener("click", async function() {
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processando...';
+            await markChapterAsCompleted();
+        });
+
+        document.getElementById("fullscreen-conclude-btn")?.addEventListener("click", async function() {
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processando...';
+            await markChapterAsCompleted();
+        });
+
+        document.getElementById("btn-fullscreen")?.addEventListener("click", toggleFullscreen);
+        document.getElementById("fullscreen-exit-btn")?.addEventListener("click", toggleFullscreen);
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    });
+</script>
+
+<h2>{{ capitulo.curso.nome }} - {% if is_exercicio %}Exercício{% else %}Aula{% endif %} {{ capitulo.ordem }}: {{ capitulo.titulo }}</h2>
+
+<div style="display: flex; justify-content: center; margin: 20px 0;">
+    <div class="captivate-container">
+        <iframe src="{% static capitulo.url %}?user_id={{ request.user.id }}&capitulo_id={{ capitulo.id }}"
+                width="1032px"
+                height="774px"
+                frameborder="0"
+                allowfullscreen
+                sandbox="allow-scripts allow-same-origin"></iframe>
+
+        <!-- Botão de concluir na tela cheia (inicialmente oculto) -->
+        {% if not is_exercicio %}
+            <button id="fullscreen-conclude-btn" class="btn btn-primary"
+                    style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+                ✅ Marcar como Concluído
+            </button>
+        {% endif %}
+
+        <!-- Botão de sair da tela cheia (só aparece quando em tela cheia) -->
+        <button id="fullscreen-exit-btn" class="btn btn-secondary"
+                style="display: none; position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
+            <i class="fas fa-compress"></i> Sair
+        </button>
+    </div>
+</div>
+
+<div class="mt-3" style="text-align: center;">
+    {% if is_exercicio %}
+        <button id="btn-continuar" class="btn btn-success" style="display: none;">
+            → Continuar para Próxima Aula
+        </button>
+    {% else %}
+        <button id="btn-concluir" class="btn btn-primary" style="display: none;">
+            ✅ Marcar Aula como Concluída
+        </button>
+    {% endif %}
+    <button id="btn-fullscreen" class="btn btn-info ml-2">
+        <i class="fas fa-expand"></i> Tela Cheia
+    </button>
+    <a href="{% url 'cursos:detalhes_curso' capitulo.curso.id %}" class="btn btn-secondary ml-2">
+        ← Voltar para o curso
+    </a>
+</div>
+
+<style>
+    .captivate-container {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    :fullscreen .captivate-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        background-color: #000;
+    }
+
+    :fullscreen .captivate-container iframe {
+        width: 90%;
+        height: 90%;
+        max-width: 1032px;
+        max-height: 774px;
+    }
+
+    #btn-concluir, #btn-continuar, #btn-fullscreen {
+        transition: all 0.3s ease;
+    }
+
+    #btn-concluir:hover, #btn-continuar:hover, #btn-fullscreen:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Versões para navegadores específicos */
+    :-webkit-full-screen .captivate-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        background-color: #000;
+    }
+
+    :-moz-full-screen .captivate-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        background-color: #000;
+    }
+
+    :-ms-fullscreen .captivate-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        background-color: #000;
+    }
+</style>
+
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Dashboard da Escola</h2>
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Resumo</h5>
+                    <div class="d-flex justify-content-between">
+                        <div class="text-center">
+                            <h3>{{ total_alunos }}</h3>
+                            <p>Alunos</p>
+                        </div>
+                        <div class="text-center">
+                            <h3>{{ total_professores }}</h3>
+                            <p>Professores</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'usuarios:aluno_list' %}" class="btn btn-primary me-2">
+            <i class="bi bi-people-fill"></i> Gerenciar Alunos
+        </a>
+        <a href="{% url 'usuarios:professor_list' %}" class="btn btn-primary">
+            <i class="bi bi-person-badge"></i> Gerenciar Professores
+        </a>
+    </div>
+</div>
+{% endblock %}
