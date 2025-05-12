@@ -20,7 +20,19 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from cursos import views as cursos_views
 
+#temporário
+from django.contrib.auth import get_user_model
+from django.http import HttpResponse
 
+def create_admin(request):
+    User = get_user_model()
+    User.objects.create_superuser('admin', 'admin@test.com', 'senha123')
+    return HttpResponse("Superuser criado: admin/senha123")
+
+urlpatterns = [
+    path('createadmin/', create_admin),  # Remova depois!
+]
+#temporário
 
 def home(request):
     return HttpResponse("Bem-vindo à página inicial!")
