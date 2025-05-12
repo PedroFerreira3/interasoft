@@ -155,3 +155,20 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+
+# Configurações de segurança
+SECURE_HSTS_SECONDS = 30 * 24 * 60 * 60  # 30 dias
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_SSL_REDIRECT = not DEBUG  # True em produção
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Gerar nova SECRET_KEY para produção
+if not DEBUG:
+    SECRET_KEY = os.environ['SECRET_KEY']  # Exige que seja definida no Render
