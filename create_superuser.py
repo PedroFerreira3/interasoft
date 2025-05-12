@@ -21,3 +21,14 @@ if not User.objects.filter(username=USERNAME).exists():
     print(f"Superuser criado: {USERNAME}/{PASSWORD}")
 else:
     print(f"Superuser já existe: {USERNAME}/{PASSWORD}")
+
+# Adicione no final do arquivo
+try:
+    from django.core.management import call_command
+    call_command('createsuperuser', '--noinput', '--username', USERNAME, '--email', EMAIL)
+    user = User.objects.get(username=USERNAME)
+    user.set_password(PASSWORD)
+    user.save()
+    print(f"Superuser garantido: {USERNAME}/{PASSWORD}")
+except Exception as e:
+    print(f"Erro final: {str(e)}")
