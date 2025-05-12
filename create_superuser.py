@@ -7,13 +7,17 @@ django.setup()
 
 User = get_user_model()
 
-# Verifica se o superuser já existe
-if not User.objects.filter(username='admin').exists():
+# Credenciais fixas para testes
+USERNAME = 'admin'
+EMAIL = 'admin@test.com'
+PASSWORD = 'senha&123'  # Senha simples para testes
+
+if not User.objects.filter(username=USERNAME).exists():
     User.objects.create_superuser(
-        username='admin',
-        email='admin@example.com',
-        password=os.getenv('Estagio&123')  # Defina esta variável no Render
+        username=USERNAME,
+        email=EMAIL,
+        password=PASSWORD
     )
-    print("Superuser criado com sucesso!")
+    print(f"Superuser criado: {USERNAME}/{PASSWORD}")
 else:
-    print("Superuser já existe")
+    print(f"Superuser já existe: {USERNAME}/{PASSWORD}")
