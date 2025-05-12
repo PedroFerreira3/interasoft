@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'certificados',
     'rest_framework',
     'whitenoise.runserver_nostatic',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
