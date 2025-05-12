@@ -1,24 +1,30 @@
 import os
 import django
-from django.contrib.auth import get_user_model
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
+from django.contrib.auth import get_user_model
 User = get_user_model()
 
-# Credenciais fixas para testes
-USERNAME = 'admin'
-EMAIL = 'admin@test.com'
-PASSWORD = 'senha&123'  # Senha simples para testes
-
-if not User.objects.filter(username=USERNAME).exists():
-    User.objects.create_superuser(
-        username=USERNAME,
-        email=EMAIL,
-        password=PASSWORD
+try:
+    # Cria ou atualiza o superuser
+    user, created = User.objects.get_or_create(
+        username='admin',
+        defaults={
+            'email': 'admin@test.com',
+            'is_superuser': True,
+            'is_staff': True,
+            'is_active': True
+        }
     )
-    print(f"Superuser criado: {USERNAME}/{PASSWORD}")
-else:
-    print(f"Superuser já existe: {USERNAME}/{PASSWORD}")
-
+    if created:
+        user.set_password('senha123')  # Isso criptografa automaticamente
+        user.save()
+        print("Superuser criado: admin/senha123")
+    else:
+        user.set_password('senha123')
+        user.save()
+        print("Senha do admin resetada: admin/senha123")
+except Exception as e:
+    print(f"Erro: {str(e)}")
